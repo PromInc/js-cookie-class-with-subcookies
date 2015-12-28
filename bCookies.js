@@ -1,8 +1,8 @@
 /*
  *  Read, write, and delete browser cookies and subcookies
  *
- *  Version1.1
- *  2015-03-26
+ *  Version1.2
+ *  2015-12-28
  *
  *  This framework is released under the GNU Public License, version 3 or later.
  *  http://www.gnu.org/licenses/gpl-3.0-standalone.html
@@ -14,20 +14,26 @@
  *  * bCookie.hasItem(name)
  *  * bCookie.keys()
 */
+var bCookie_Expire_Prior = 'Thu, 01 Jan 1970 00:00:01 GMT'; /* 1 (epoch) or 1970/01/01 @ 00:00:01 */
+var bCookie_Expire_Infinity_Epoch = 2145916800; /* 2038/01/01 @ 00:00:00 - 2038 bug */
+var bCookie_Expire_Infinity = 'Fri, 01 Jan 2038 00:00:00 GMT'; /* 2038/01/01 @ 00:00:00 - 2038 bug */
 var bCookie_max_age = {
-	"Infinity": 60*60*24*365*100,
+	"Infinity": bCookie_Expire_Infinity_Epoch - Math.round( new Date().valueOf() / 1000 ),
 	"one_year": 60*60*24*365,
 	"thirty_days": 60*60*24*30,
 	"fifteen_days": 60*60*24*15,
+	"five_days": 60*60*24*5,
 	"one_day": 60*60*24,
 	"one_hour": 60*60,
 	"five_minutes": 60*5,
-	"one_minute": 60
+	"one_minute": 60,
+	"one_second": 1
 };
 var bCookie_Delimiters = {
 	"nameValue": "|",
 	"key": "="
 };
+
 var bCookie = {
   getCookie: function (sKey) {
     if (!sKey) { return null; }
@@ -106,7 +112,7 @@ var bCookie = {
   },
   removeCookie: function (sKey, sPath, sDomain) {
     if (!this.hasCookie(sKey)) { return false; }
-    document.cookie = encodeURIComponent(sKey) + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT" + (sDomain ? ";domain=" + sDomain : "") + (sPath ? ";path=" + sPath : "");
+    document.cookie = encodeURIComponent(sKey) + "=;expires=" + bCookie_Expire_Prior + (sDomain ? ";domain=" + sDomain : "") + (sPath ? ";path=" + sPath : "");
     return true;
   },
   hasCookie: function (sKey) {
@@ -124,7 +130,7 @@ var bCookie = {
 			switch (vEnd.constructor) {
 				case Number:
 					if( vEnd === Infinity ) {
-						sExpires = ";expires=Fri, 31 Dec 9999 23:59:59 GMT;max-age=" + bCookie_max_age['Infinity'];
+						sExpires = ";expires=" + bCookie_Expire_Infinity + ";max-age=" + bCookie_max_age['Infinity'];
 					} else {
 						var today = new Date();
 						var expireOn = new Date(today.valueOf() + (vEnd*1000));
